@@ -1,5 +1,9 @@
+"use client";
+
+import { useEffect } from "react";
+
 export default function AuthRedirect() {
-  if (typeof window !== "undefined") {
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
     const action = params.get("action");
@@ -9,7 +13,7 @@ export default function AuthRedirect() {
     const deepLink = `cloudnest://auth?action=${action}&userId=${userId}&secret=${secret}`;
 
     window.location.href = deepLink;
-  }
+  }, []);
 
   return <p>Redirecting...</p>;
 }
