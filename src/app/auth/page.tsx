@@ -1,19 +1,10 @@
 "use client";
 
 import { Client, Account } from "appwrite";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
-const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
-
-const client = new Client()
-  .setEndpoint(ENDPOINT!)
-  .setProject(PROJECT_ID!);
-
-const account = new Account(client);
-
-export default function AuthRedirect() {
+function AuthRedirectContent() {
   const searchParams = useSearchParams();
   const action = searchParams.get("action");
   const userId = searchParams.get("userId");
@@ -23,6 +14,13 @@ export default function AuthRedirect() {
   const [message, setMessage] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const account = useMemo(() => {
+    const client = new Client()
+      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+    return new Account(client);
+  }, []);
 
   useEffect(() => {
     async function handleAction() {
@@ -44,12 +42,12 @@ export default function AuthRedirect() {
       }
 
       if (action === "reset-password") {
-        setStatus("form"); // show password reset form
+        setStatus("form");
       }
     }
 
     handleAction();
-  }, [action, userId, secret]);
+  }, [account, action, userId, secret]);
 
   const handlePasswordReset = async () => {
     if (!newPassword || newPassword !== confirmPassword) {
@@ -99,4 +97,12 @@ export default function AuthRedirect() {
   }
 
   return null;
+}
+
+export default function AuthRedirect() {
+  return (
+    <Suspense fallback={<p>Processing...</p>}>
+      <AuthRedirectContent />
+    </Suspense>
+  );
 }
